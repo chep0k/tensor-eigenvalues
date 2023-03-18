@@ -7,17 +7,18 @@ from .utils.linalg import tenvec
 
 
 @verify_not_modified(VERIFY_NOT_MODIFIED)
-def rayleight_quotient(A: np.ndarray, X: np.ndarray) -> float:
+def rayleight_quotient(A: np.ndarray, x: np.ndarray) -> float:
     """
-    Compute Rayleigh quotient with numpy.
+    Compute Rayleigh quotient with numpy
 
     :param A: supersymmetric tensor of shape (n x n x ... x n) of order k
-    :param X: normalized vector of shape (n,)
+    :param x: normalized vector of shape (n,)
 
-    :return: Rayleigh quotient R_A(X)
+    :return: Rayleigh quotient R_A(x)
     """
     k = A.ndim
-    return tenvec(A, X, times=k)
+    rq = tenvec(A, x, times=k)
+    return rq
 
 
 @verify_not_modified(VERIFY_NOT_MODIFIED)

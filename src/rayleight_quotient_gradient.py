@@ -18,9 +18,9 @@ def rayleight_quotient_gradient(A: np.ndarray, x: np.ndarray) -> np.ndarray:
     :return: Rayleigh quotient gradient grad(R_A(x))
     """
     k = A.ndim
-    A_by_X_grad = tenvec(A, x, times=k-1)
-    rq = rayleight_quotient(A, x)
-    return k * (A_by_X_grad - rq * x)
+    t = tenvec(A, x, times=k-1)
+    rq = x @ t  # rq = rayleight_quotient(A, x)
+    return k * (t - rq * x)
 
 
 @verify_not_modified(VERIFY_NOT_MODIFIED)
