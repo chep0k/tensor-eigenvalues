@@ -30,25 +30,11 @@ class GradientDescentBase(ABC):
         self._eps = eps
 
         self._x_history: list[float] = None
-
-        self.f_history: list[float] = None
-        self.f_residual_history: list[float] = None
-        self.f_grad_norm_history: list[float] = None
-        self.f_grad_residual_norm_history: list[float] = None
+        self._step_history: list[float] = None
 
     def _reset(self) -> None:
         self._x_history = []
-
-    def _report_back(self) -> None:
-        assert self._x_history is not None, "launch minimization first"
-
-        _f_history = [self._f(x) for x in self._x_history]
-        self.f_history = _f_history
-        self.f_residual_history = [abs(next - prev) for next, prev in zip(_f_history[1:], _f_history)]
-
-        _f_grad_history = [self._f_grad(x) for x in self._x_history]
-        self.f_grad_norm_history = [np.linalg.norm(grad) for grad in _f_grad_history]
-        self.f_grad_residual_norm_history = [np.linalg.norm(next - prev) for next, prev in zip(_f_grad_history[1:], _f_grad_history)]
+        self._step_history = []
 
     @classmethod
     def from_tensor(cls, A: np.ndarray, *args: tp.Any, **kwargs: tp.Any) -> 'GradientDescentBase':
@@ -66,7 +52,6 @@ class GradientDescentBase(ABC):
     def minimize(self, x_0: np.ndarray, step_controller: StepControllerBase) -> np.ndarray:
         self._reset()
         x = self._minimize_impl(x_0, step_controller)
-        self._report_back()
         return x
 
 
@@ -82,12 +67,6 @@ class NewthonIterationsBase(GradientDescentBase):
                        eps: float = 1e-6) -> None:
         super().__init__(f, f_derivative, f_grad, max_iter=max_iter, eps=eps)
         self._f_hess = f_hessian
-
-        self.lin_solver_error_history: list[float] = None
-
-    def _reset(self) -> None:
-        super()._reset()
-        self.lin_solver_error_history = []
 
     @classmethod
     def from_tensor(cls, A: np.ndarray, *args: tp.Any, **kwargs: tp.Any) -> 'NewthonIterationsBase':

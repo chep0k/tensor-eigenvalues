@@ -14,12 +14,18 @@ from ._base import NewthonIterationsBase
 
 
 class RiemannianNewtonIterations(NewthonIterationsBase):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
+        self.lin_solver_error_history: list[float] = None
+
+    def _reset(self) -> None:
+        super()._reset()
+        self.lin_solver_error_history = []
+
     @verify_not_modified(VERIFY_NOT_MODIFIED)
-    def _minimize_impl(self, x_0: np.ndarray, step_controller: StepControllerBase = None):
-        self._reset()
+    def _minimize_impl(self, x_0: np.ndarray, step_controller: StepControllerBase):
         x = normalize_vector(x_0)
-        if step_controller is None:
-            step_controller = ConstantController()
 
         iteration = 0
         while True:
@@ -41,6 +47,6 @@ class RiemannianNewtonIterations(NewthonIterationsBase):
             # x = normalize_vector(x + xi_tangent)
             step_controller_params = dict(invalid='fix', grad=grad, deriv=self._f_derivative(x))
             step = step_controller.step(self._f, x, xi_tangent, **step_controller_params)
+            self._step_history.append(step)
             x = normalize_vector(x + step * xi_tangent)
-        self._report_back()
         return x
