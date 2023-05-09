@@ -11,6 +11,10 @@ from src.utils.linalg import normalize_vector
 
 class GradientDescent(GradientDescentBase):
     @verify_not_modified(VERIFY_NOT_MODIFIED)
+    def shortname(self) -> str:
+        return "GD"
+ 
+    @verify_not_modified(VERIFY_NOT_MODIFIED)
     def _minimize_impl(self, x_0: np.ndarray, step_controller: StepControllerBase) -> np.ndarray:
         x = normalize_vector(x_0)
         iteration = 0

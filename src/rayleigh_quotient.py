@@ -7,7 +7,7 @@ from .utils.linalg import tenvec
 
 
 @verify_not_modified(VERIFY_NOT_MODIFIED)
-def rayleight_quotient(A: np.ndarray, x: np.ndarray) -> float:
+def rayleigh_quotient(A: np.ndarray, x: np.ndarray) -> float:
     """
     Compute Rayleigh quotient with numpy
 
@@ -22,7 +22,7 @@ def rayleight_quotient(A: np.ndarray, x: np.ndarray) -> float:
 
 
 @verify_not_modified(VERIFY_NOT_MODIFIED)
-def rayleight_quotient_naive(A: np.ndarray, X: np.ndarray) -> float:
+def rayleigh_quotient_naive(A: np.ndarray, X: np.ndarray) -> float:
     """
     Compute Rayleigh quotient with for loops.
 

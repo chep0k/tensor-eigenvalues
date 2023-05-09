@@ -49,10 +49,13 @@ def normalize_vector(x: np.ndarray) -> np.ndarray:
 
     :return: resulted vector
     """
+    x = x.astype(np.float128)
+
     x_norm = np.linalg.norm(x)
     assert x_norm > 0, "cannot normalize vector of zeros"
+
     x = x / x_norm
-    return x
+    return x.astype(float)
 
 @verify_not_modified(VERIFY_NOT_MODIFIED)
 def generate_normalized_vector(n: int) -> np.ndarray:
@@ -71,7 +74,6 @@ def generate_normalized_vector(n: int) -> np.ndarray:
 def tenvec(A: np.ndarray, x: np.ndarray, times: int) -> np.ndarray | float:
     """
     Compute A(I_n, ..., I_n, x, ..., x) with |times| entries of vector x in product
-    Here n is the dimension of vector x
 
     :param A: (supersymmetric) tensor of shape (n, n, ..., n) of order k
     :param x: (normalized) vector of dimension n
@@ -82,6 +84,22 @@ def tenvec(A: np.ndarray, x: np.ndarray, times: int) -> np.ndarray | float:
     t = A
     for _ in range(times):
         t = np.einsum("i,...i->...", x, t)
+    return t
+
+@verify_not_modified(VERIFY_NOT_MODIFIED)
+def tenxmatrix(A: np.ndarray, M: np.ndarray, times: int) -> np.ndarray | float:
+    """
+    Compute A(I_n, ..., I_n, M, ..., M) with |times| entries of matrix M in product
+
+    :param A: (supersymmetric) tensor of shape (n, n, ..., n) of order k
+    :param M: matrix of shape (n, m)
+    :param times: number of entries of matrix M in product
+
+    :return: resulted tensor
+    """
+    t = A
+    for _ in range(times):
+        t = np.einsum("i...,ij->...j", t, M)
     return t
 
 # class Projection:

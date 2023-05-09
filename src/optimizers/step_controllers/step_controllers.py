@@ -20,7 +20,7 @@ class StepControllerBase(ABC):
         """
         raise NotImplemented()
 
-    def _update_step(self, d: float, step: float, invalid: str) -> float:
+    def _validate_step(self, d: float, step: float, invalid: str) -> float:
         """
         Function to handle invalid direction and invert step, if needed
 
@@ -43,11 +43,14 @@ class StepControllerBase(ABC):
 
     @abstractmethod
     def step(self, f: tp.Callable[[np.ndarray], float], x: np.ndarray, p: np.ndarray,
-             invalid: str = "error", **kwargs: tp.Any) -> float:
+             alpha_0: float, invalid: str = "error", **kwargs: tp.Any) -> float:
         """
+        Calculate step
+
         :param f: function to be minimized
         :param x: current point
         :param p: computed direction of retraction
+        :param alpha_0: initial step value
         :param invalid: indicates how to handle invalid direction
         :param **kwargs: see documentation of a certain implementation
 
@@ -61,17 +64,13 @@ class ConstantController(StepControllerBase):
     Implements constant step method.
     """
     def name(self):
-        return f"constant={self._step}"
+        return "constant"
 
-    def __init__(self, step: float=0.01) -> None:
-        """
-        :param step: value of step to be returned on every single call
-        """
-        assert step > 0, "parameter |step| should be strictly positive"
-        self._step = step
+    def __init__(self) -> None:
+        pass
 
     verify_not_modified(VERIFY_NOT_MODIFIED)
-    def step(self, f, x, p, invalid="error", **kwargs):
+    def step(self, f, x, p, alpha_0=0.01, invalid="error", **kwargs):
         """
         :param **kwargs: should contain value with key |grad|,
                          which is the gradient of function |f| at |x|
@@ -80,7 +79,7 @@ class ConstantController(StepControllerBase):
         grad: np.ndarray = kwargs["grad"]
 
         t = grad @ p
-        step = self._update_step(t, self._step, invalid=invalid)
+        step = self._validate_step(t, alpha_0, invalid=invalid)
         return step
 
 
@@ -92,13 +91,12 @@ class BacktrackingLineSearchController(StepControllerBase):
     def name(self):
         return "backtracking line search"
 
-    def __init__(self, alpha_0: float = 1.0, tau: float=0.5, c: float=0.5) -> None:
+    def __init__(self, tau: float=0.5, c: float=0.5) -> None:
         """
         :param alpha_0: initial alpha (step) value
         :param tau: coefficient to multiply |alpha| by on each iteration
         :param c: coefficient for rhs of inequality
         """
-        self._alpha_0 = alpha_0
         self._tau = tau
         self._c = c
 
@@ -122,7 +120,7 @@ class BacktrackingLineSearchController(StepControllerBase):
         return alpha
 
     # @verify_not_modified(VERIFY_NOT_MODIFIED)
-    def step(self, f, x, p, invalid="error", **kwargs: tp.Any):
+    def step(self, f, x, p, alpha_0 = 1.0, invalid="error", **kwargs: tp.Any):
         """
         :param **kwargs: should contain value with key |grad|,
                          which is the gradient of function |f| at |x|
@@ -131,5 +129,6 @@ class BacktrackingLineSearchController(StepControllerBase):
         grad = kwargs["grad"]
 
         t = grad @ p
-        alpha = self._update_step(t, self._alpha_0, invalid=invalid)
-        return self._step_safe(f, x, p, t, alpha)
+        alpha = self._validate_step(t, alpha_0, invalid=invalid)
+        step = self._step_safe(f, x, p, t, alpha)
+        return step

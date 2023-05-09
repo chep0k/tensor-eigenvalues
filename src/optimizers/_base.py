@@ -4,24 +4,28 @@ import typing as tp
 import numpy as np
 
 from src.optimizers.step_controllers.step_controllers import (
-    StepControllerBase, ConstantController
+    StepControllerBase
 )
-from src.rayleight_quotient import rayleight_quotient
-from src.rayleight_quotient_derivative import rayleight_quotient_derivative
-from src.rayleight_quotient_gradient import rayleight_quotient_gradient
-from src.rayleight_quotient_hessian import rayleight_quotient_hessian
+from src.rayleigh_quotient import rayleigh_quotient
+from src.rayleigh_quotient_derivative import rayleigh_quotient_derivative
+from src.rayleigh_quotient_gradient import rayleigh_quotient_gradient
+from src.rayleigh_quotient_hessian import rayleigh_quotient_hessian
 from src.utils.testing import VERIFY_NOT_MODIFIED, verify_not_modified
 
 
 class GradientDescentBase(ABC):
     """
     Base class for all gradient descent-based minimization methods on unit sphere S^{n-1}.
+
+    Provide functional for gradient-based optimization of Rayleigh quotient.
+    Compute gradient and directional derivative exactly in each point.
     """
     def __init__(self, f: tp.Callable[[np.ndarray], float],
                        f_derivative: tp.Callable[[np.ndarray], np.ndarray],
                        f_grad: tp.Callable[[np.ndarray], np.ndarray],
                        max_iter: int = 10000,
-                       eps: float = 1e-4) -> None:
+                       eps: float = 1e-4,
+                       **kwargs: tp.Any) -> None:
         super().__init__()
         self._f = f
         self._f_derivative = f_derivative
@@ -38,10 +42,15 @@ class GradientDescentBase(ABC):
 
     @classmethod
     def from_tensor(cls, A: np.ndarray, *args: tp.Any, **kwargs: tp.Any) -> 'GradientDescentBase':
-        return cls(lambda x: rayleight_quotient(A, x),
-                   lambda x: rayleight_quotient_derivative(A, x),
-                   lambda x: rayleight_quotient_gradient(A, x),
+        return cls(lambda x: rayleigh_quotient(A, x),
+                   lambda x: rayleigh_quotient_derivative(A, x),
+                   lambda x: rayleigh_quotient_gradient(A, x),
                    *args, **kwargs)
+
+    @abstractmethod
+    @verify_not_modified(VERIFY_NOT_MODIFIED)
+    def shortname(self) -> str:
+        pass
 
     @abstractmethod
     @verify_not_modified(VERIFY_NOT_MODIFIED)
@@ -58,20 +67,24 @@ class GradientDescentBase(ABC):
 class NewthonIterationsBase(GradientDescentBase):
     """
     Base class for all newthon-based minimization methods on unit sphere S^{n-1}.
+
+    Provide functional for gradient- and hessian-based optimization of Rayleigh quotient.
+    Compute gradient, hessian and directional derivative exactly in each point.
     """
     def __init__(self, f: tp.Callable[[np.ndarray], float],
                        f_derivative: tp.Callable[[np.ndarray], np.ndarray],
                        f_grad: tp.Callable[[np.ndarray], float],
                        f_hessian: tp.Callable[[np.ndarray], np.ndarray],
                        max_iter: int = 10000,
-                       eps: float = 1e-6) -> None:
+                       eps: float = 1e-6,
+                       **kwargs: tp.Any) -> None:
         super().__init__(f, f_derivative, f_grad, max_iter=max_iter, eps=eps)
         self._f_hess = f_hessian
 
     @classmethod
     def from_tensor(cls, A: np.ndarray, *args: tp.Any, **kwargs: tp.Any) -> 'NewthonIterationsBase':
-        return cls(lambda x: rayleight_quotient(A, x),
-                   lambda x: rayleight_quotient_derivative(A, x),
-                   lambda x: rayleight_quotient_gradient(A, x),
-                   lambda x: rayleight_quotient_hessian(A, x),
+        return cls(lambda x: rayleigh_quotient(A, x),
+                   lambda x: rayleigh_quotient_derivative(A, x),
+                   lambda x: rayleigh_quotient_gradient(A, x),
+                   lambda x: rayleigh_quotient_hessian(A, x),
                    *args, **kwargs)
